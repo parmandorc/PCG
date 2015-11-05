@@ -16,7 +16,5 @@ public class PlayerController : MonoBehaviour {
 		if (moveVector.sqrMagnitude > 0.001) {
 			transform.position += moveVector * movementSpeed * Time.deltaTime;
 		}
-
-		ChunkLoader.Instance.UpdateTick (this);
 	}
 }

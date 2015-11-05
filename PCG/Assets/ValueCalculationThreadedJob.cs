@@ -38,7 +38,7 @@ public class ValueCalculationThreadedJob : ThreadedJob
 			Vector3 point1 = Vector3.Lerp (point10, point11, y * stepSize);
 			for (int x = 0; x <= resolution; x++, v++) {
 				Vector3 point = Vector3.Lerp (point0, point1, x * stepSize);
-				float sample = Noise.Sum(point, frequency, 8, lacunarity, persistence) + 0.5f;
+				float sample = Noise.Sum(point, frequency, 6, lacunarity, persistence) + 0.5f;
 				colors[v] = coloring.Evaluate(sample);
 				sample *= strength / frequency;
 				vertices[v].y = sample / 1;

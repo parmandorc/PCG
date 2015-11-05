@@ -4,6 +4,9 @@ using System.Collections;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class TerrainChunk : MonoBehaviour {
 
+	// Used by the ChunkLoader to know what chunks have to be updated.
+	public long version;
+
 	// The mesh of the generated terrain
 	private Mesh terrainMesh;
 
@@ -22,7 +25,8 @@ public class TerrainChunk : MonoBehaviour {
 		GetComponent<MeshFilter>().mesh = terrainMesh;
 	}
 
-	public TerrainChunk Init(Vector2 chunkID) {
+	public TerrainChunk Init(Vector2 chunkID, long version) {
+		this.version = version;
 
 		gameObject.transform.position = new Vector3 (chunkID.x + 0.5f, 0f, chunkID.y + 0.5f);
 

@@ -10,9 +10,13 @@ public class TerrainCharacteristicsEditor : MonoBehaviour {
 	public Slider roughnessSlider;
 	public Slider flatnessSlider;
 
+	private bool initialized = false;
+
 	public void Init () {
 		roughnessSlider.value = cl.persistence;
 		flatnessSlider.value = cl.strength;
+
+		initialized = true;
 	}
 
 	public void ChangeResolution(float value) {
@@ -20,12 +24,16 @@ public class TerrainCharacteristicsEditor : MonoBehaviour {
 	}
 
 	public void ChangeRoughness(float value) {
-		cl.persistence = value;
-		cl.ReloadAllChunks ();
+		if (initialized) {
+			cl.persistence = value;
+			cl.ReloadAllChunks ();
+		}
 	}
 
 	public void ChangeFlatness(float value) {
-		cl.strength = value;
-		cl.ReloadAllChunks ();
+		if (initialized) {
+			cl.strength = value;
+			cl.ReloadAllChunks ();
+		}
 	}
 }
