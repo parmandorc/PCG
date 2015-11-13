@@ -78,9 +78,8 @@ public class TerrainChunk : MonoBehaviour {
 		}
 
 		// Launch the value calculation thread
-		ChunkLoader cl = ChunkLoader.Instance;
-		thread = new ValueCalculationThreadedJob (chunkID, resolution, vertices,
-		                                          cl.frequency, cl.lacunarity, cl.persistence, cl.strength, cl.coloring);
+		TerrainCharacteristicsManager tcm = TerrainCharacteristicsManager.Instance;
+		thread = new ValueCalculationThreadedJob (chunkID, resolution, vertices, tcm.getTerrainAreasDeepCopy ());
 		thread.Start();
 
 		// If the thread was already launched, and thus the coroutine already existed, we do not neet to start the waiting coroutine again.

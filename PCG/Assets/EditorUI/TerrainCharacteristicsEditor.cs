@@ -4,36 +4,51 @@ using System.Collections;
 
 public class TerrainCharacteristicsEditor : MonoBehaviour {
 
-	public ChunkLoader cl;
-
-	public Slider resolutionSlider;
-	public Slider roughnessSlider;
+	// References to the sliders the editor has
+	public Slider averageHeightSlider;
 	public Slider flatnessSlider;
+	public Slider roughnessSlider;
 
-	private bool initialized = false;
+	// References to managers
+	private TerrainCharacteristicsManager TCM;
+	private ChunkLoader CL;
+
+	// If true, changes in sliders will not affect the variables they control
+	private bool dontAffectVariables = true;
+
+	private Color selectedTerrainAreaColorKey;
 
 	public void Init () {
-		roughnessSlider.value = cl.persistence;
-		flatnessSlider.value = cl.strength;
+		// Get references to managers
+		TCM = TerrainCharacteristicsManager.Instance;
+		CL = ChunkLoader.Instance;
 
-		initialized = true;
-	}
+		selectedTerrainAreaColorKey = Color.white;
+		TerrainArea area = TCM.getTerrainArea (selectedTerrainAreaColorKey);
 
-	public void ChangeResolution(float value) {
-
-	}
-
-	public void ChangeRoughness(float value) {
-		if (initialized) {
-			cl.persistence = value;
-			cl.ReloadAllChunks ();
+		// Initialize sliders with values from the just selected area
+		dontAffectVariables = true;
+		{
+			averageHeightSlider.value = area.averageHeight;
+			flatnessSlider.value = area.flatness;
+			roughnessSlider.value = area.roughness;
 		}
+		dontAffectVariables = false;
 	}
 
 	public void ChangeFlatness(float value) {
-		if (initialized) {
-			cl.strength = value;
-			cl.ReloadAllChunks ();
+		if (!dontAffectVariables) {
+			TCM.getTerrainArea(selectedTerrainAreaColorKey).flatness = value;
+			CL.ReloadAllChunks ();
 		}
 	}
+
+	public void ChangeRoughness(float value) {
+		if (!dontAffectVariables) {
+			TCM.getTerrainArea(selectedTerrainAreaColorKey).roughness = value;
+			CL.ReloadAllChunks ();
+		}
+	}
+
+
 }

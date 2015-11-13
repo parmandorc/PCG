@@ -5,21 +5,10 @@ using System.Collections.Generic;
 public class ChunkLoader : MonoBehaviour 
 {
 	public TerrainChunk terrainChunkPrefab;
-
-	public Gradient coloring;
-
-	public float frequency = 8f;
-
-	public float lacunarity = 2f;
-
-	public float persistence = 0.5f;
-
-	public float strength = 1f;
-
-	public TerrainCharacteristicsEditor TCE;
-
-	private Vector2? lastChunkID = null;
 	
+	private Vector2? lastChunkID = null;
+
+	// Table of all the chunks loaded in the scene (key = Vector2("chunkID"), value = TerrainChunk)
 	private Hashtable chunks;
 
 	// Used to know what chunks have to be updated. Whenever a change in terrain characteristics occur, version is incremented.
@@ -41,10 +30,6 @@ public class ChunkLoader : MonoBehaviour
 
 
 		chunks = new Hashtable();
-	}
-
-	void Start() {
-		TCE.Init ();
 	}
 
 	private void Update () {

@@ -5,22 +5,16 @@ public class ValueCalculationThreadedJob : ThreadedJob
 {
 	private Vector2 chunkID;
 	private int resolution;
-	private float frequency, lacunarity, persistence, strength;
-	private Gradient coloring;
+	private Hashtable terrainAreas;
 
 	public Vector3[] vertices;
 	public Color[] colors;
 
-	public ValueCalculationThreadedJob(Vector2 chunkID, int resolution, Vector3[] vertices,
-	                                   float frequency, float lacunarity, float persistence, float strength, Gradient coloring) {
+	public ValueCalculationThreadedJob(Vector2 chunkID, int resolution, Vector3[] vertices, Hashtable terrainAreas) {
 		this.chunkID = chunkID;
 		this.resolution = resolution;
 		this.vertices = vertices;
-		this.frequency = frequency;
-		this.lacunarity = lacunarity;
-		this.persistence = persistence;
-		this.strength = strength;
-		this.coloring = coloring;
+		this.terrainAreas = terrainAreas;
 	}
 
 	protected override void OnRun() {
@@ -30,7 +24,17 @@ public class ValueCalculationThreadedJob : ThreadedJob
 		Vector3 point10 = new Vector3( 0.5f,-0.5f) + offset;
 		Vector3 point01 = new Vector3(-0.5f, 0.5f) + offset;
 		Vector3 point11 = new Vector3( 0.5f, 0.5f) + offset;
-		
+
+		// Get algorithm parameters from terrainAreas
+		// For now, get the parameters from the default 'white' area, and those will be the ones for the whole process.
+		// In the future, each point will get the area it belongs to.
+		TerrainArea defaultArea = (TerrainArea) terrainAreas[Color.white];
+		float frequency = defaultArea.frequency;
+		float lacunarity = defaultArea.lacunarity;
+		float persistence = defaultArea.roughness;
+		float strength = defaultArea.flatness;
+		Gradient coloring = defaultArea.coloring;
+
 		colors = new Color[vertices.Length];
 		float stepSize = 1f / resolution;
 		for (int v = 0, y = 0; y <= resolution; y++) {
