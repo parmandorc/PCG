@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class TerrainCharacteristicsManager : MonoBehaviour {
 
@@ -16,7 +17,7 @@ public class TerrainCharacteristicsManager : MonoBehaviour {
 	public static TerrainCharacteristicsManager Instance { get ; private set; }
 
 	// Table of the terrain areas that form the map (key = color, value = terrainArea)
-	private Hashtable terrainAreas;
+	private Dictionary<Color, TerrainArea> terrainAreas;
 
 	// The resolution of the maps in chunks
 	private int mapSize = 5;
@@ -36,8 +37,9 @@ public class TerrainCharacteristicsManager : MonoBehaviour {
 		Instance = this;
 
 		// Create default terrain area
-		terrainAreas = new Hashtable ();
-		terrainAreas.Add (Color.white, new TerrainArea (defaultAverageHeight, defaultFlatness, defaultRoughness, defaultColoring));
+		terrainAreas = new Dictionary<Color, TerrainArea> ();
+		terrainAreas.Add (Color.white, newDefaultTerrainArea());
+
 		TCE.Init ();
 	}
 
@@ -52,16 +54,28 @@ public class TerrainCharacteristicsManager : MonoBehaviour {
 	}
 
 	// Returns a deepCopy of the terrainAreas table. Threads need a deep copy because values might change during the thread process.
-	public Hashtable getTerrainAreasDeepCopy() {
-		Hashtable deepCopy = new Hashtable ();
+	public Dictionary<Color, TerrainArea> getTerrainAreasDeepCopy() {
+		Dictionary<Color, TerrainArea> deepCopy = new Dictionary<Color, TerrainArea> ();
 		foreach (Color colorKey in terrainAreas.Keys) {
-			deepCopy.Add(colorKey, ((TerrainArea)terrainAreas[colorKey]).deepCopy());
+			deepCopy.Add(colorKey, (terrainAreas[colorKey]).deepCopy());
 		}
 		return deepCopy;
 	}
 
 	// Returns a reference to the requested TerrainArea
 	public TerrainArea getTerrainArea(Color colorKey) {
-		return (TerrainArea) terrainAreas[colorKey];
+		return terrainAreas[colorKey];
+	}
+
+	public bool colorKeyIsUsed(Color colorKey) {
+		return terrainAreas.ContainsKey(colorKey);
+	}
+
+	public void addTerrainArea(Color colorKey) {
+		terrainAreas.Add (colorKey, newDefaultTerrainArea ());
+	}
+
+	public TerrainArea newDefaultTerrainArea() {
+		return new TerrainArea (defaultAverageHeight, defaultFlatness, defaultRoughness, defaultColoring);
 	}
 }

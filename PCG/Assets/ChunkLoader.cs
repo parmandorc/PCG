@@ -9,7 +9,7 @@ public class ChunkLoader : MonoBehaviour
 	private Vector2? lastChunkID = null;
 
 	// Table of all the chunks loaded in the scene (key = Vector2("chunkID"), value = TerrainChunk)
-	private Hashtable chunks;
+	private Dictionary<Vector2, TerrainChunk> chunks;
 
 	// Used to know what chunks have to be updated. Whenever a change in terrain characteristics occur, version is incremented.
 	private long currentVersion = 0;
@@ -28,8 +28,7 @@ public class ChunkLoader : MonoBehaviour
 		// Here we save our singleton instance
 		Instance = this;
 
-
-		chunks = new Hashtable();
+		chunks = new Dictionary<Vector2, TerrainChunk>();
 	}
 
 	private void Update () {
@@ -43,14 +42,14 @@ public class ChunkLoader : MonoBehaviour
 
 			foreach (Vector2 chunkID in chunkIDs) {
 				// Create unvisited chunks
-				if (!chunks.Contains(chunkID))
+				if (!chunks.ContainsKey(chunkID))
 				{
 					TerrainChunk chunk = Instantiate(terrainChunkPrefab).Init(chunkID, currentVersion);
 					chunks.Add(chunkID, chunk);
 				}
 				else {
 					// Reload outdated chunks
-					TerrainChunk chunk = (TerrainChunk)chunks[chunkID];
+					TerrainChunk chunk = chunks[chunkID];
 					if (chunk.version < currentVersion) {
 						chunk.CalculateValues();
 						chunk.version = currentVersion;
@@ -72,7 +71,7 @@ public class ChunkLoader : MonoBehaviour
 		foreach (Vector2 chunkID in chunks.Keys) {
 			if (chunkIDs.Contains(chunkID))
 			{
-				TerrainChunk chunk = (TerrainChunk)chunks[chunkID];
+				TerrainChunk chunk = chunks[chunkID];
 				chunk.CalculateValues();
 				chunk.version = currentVersion;
 			}

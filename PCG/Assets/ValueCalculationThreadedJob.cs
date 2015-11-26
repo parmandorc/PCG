@@ -1,16 +1,17 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class ValueCalculationThreadedJob : ThreadedJob
 {
 	private Vector2 chunkID;
 	private int resolution;
-	private Hashtable terrainAreas;
+	private Dictionary<Color, TerrainArea> terrainAreas;
 
 	public Vector3[] vertices;
 	public Color[] colors;
 
-	public ValueCalculationThreadedJob(Vector2 chunkID, int resolution, Vector3[] vertices, Hashtable terrainAreas) {
+	public ValueCalculationThreadedJob(Vector2 chunkID, int resolution, Vector3[] vertices, Dictionary<Color, TerrainArea> terrainAreas) {
 		this.chunkID = chunkID;
 		this.resolution = resolution;
 		this.vertices = vertices;
@@ -28,7 +29,7 @@ public class ValueCalculationThreadedJob : ThreadedJob
 		// Get algorithm parameters from terrainAreas
 		// For now, get the parameters from the default 'white' area, and those will be the ones for the whole process.
 		// In the future, each point will get the area it belongs to.
-		TerrainArea defaultArea = (TerrainArea) terrainAreas[Color.white];
+		TerrainArea defaultArea = terrainAreas[Color.white];
 		float frequency = defaultArea.frequency;
 		float lacunarity = defaultArea.lacunarity;
 		float persistence = defaultArea.roughness;
