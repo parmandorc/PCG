@@ -4,8 +4,11 @@ using System.Collections.Generic;
 
 public class TerrainCharacteristicsManager : MonoBehaviour {
 
-	// Reference to the editor
+	// Reference to the Editor
 	public TerrainCharacteristicsEditor TCE;
+
+	// Reference to the Minimap
+	public Minimap minimap;
 
 	// Default coloring of the terrain
 	public Gradient defaultColoring;
@@ -16,14 +19,11 @@ public class TerrainCharacteristicsManager : MonoBehaviour {
 	// Static singleton property
 	public static TerrainCharacteristicsManager Instance { get ; private set; }
 
+	// The resolution of the map in chunks
+	public int mapSize = 5;
+
 	// Table of the terrain areas that form the map (key = color, value = terrainArea)
 	private Dictionary<Color, TerrainArea> terrainAreas;
-
-	// The resolution of the maps in chunks
-	private int mapSize = 5;
-
-	// The pixel resolution a chunk has in the map image
-	private const int chunkSize = 100;
 
 	void Awake () {
 		// First we check if there are any other instances conflicting
@@ -60,6 +60,39 @@ public class TerrainCharacteristicsManager : MonoBehaviour {
 			deepCopy.Add(colorKey, (terrainAreas[colorKey]).deepCopy());
 		}
 		return deepCopy;
+	}
+
+	// Returns a copy of the portion of the minimap texture corresponding to the given chunk.
+	// The map is extended a pixel in every direction for the interpolation for graduality.
+	public object getChunkMap(Vector2 chunkID) {
+		int chunkResolution = minimap.chunkResolution;
+
+		Color[][] chunkMap = new Color[chunkResolution + 2][];
+		for (int i = 0; i < chunkResolution + 2; i++)
+			chunkMap [i] = new Color[chunkResolution + 2];
+
+		// Optimization if map only contains one color
+		bool optimizable = true;
+		Color? optimizedColorKey = null;
+
+		int xOffset = (int)chunkID.x * chunkResolution;
+		int yOffset = (int)chunkID.y * chunkResolution;
+		for (int x = -1; x < chunkResolution + 1; x++) {
+			for (int y = -1; y < chunkResolution + 1; y++) {
+				Color color = AuxiliarMethods.FixColor(minimap.getMinimapTexturePixel(x + xOffset, y + yOffset));
+				chunkMap[x + 1][y + 1] = color;
+
+				// Optimization if map only contains one color
+				if (optimizable) {
+					if (optimizedColorKey == null)
+						optimizedColorKey = color;
+					else if (optimizedColorKey != color)
+						optimizable = false;
+				}
+			}
+		}
+
+		return (optimizable) ? (object)optimizedColorKey : (object)chunkMap;
 	}
 
 	// Returns a reference to the requested TerrainArea

@@ -81,9 +81,10 @@ public class ChunkLoader : MonoBehaviour
 	// Returns the IDs of the chunks that should be loaded. Note: not only the one the player is in, but also the surrounding ones so that navigation is fluid.
 	private List<Vector2> getChunkIDsToLoad(Vector2 chunkID)
 	{
+		int mapSize = TerrainCharacteristicsManager.Instance.mapSize - 1;
 		List<Vector2> IDs = new List<Vector2> ();
-		for (float x = chunkID.x - 1; x <= chunkID.x + 1; x++) {
-			for (float y = chunkID.y; y <= chunkID.y + 2; y++) {
+		for (float x = Mathf.Max(chunkID.x - 1, 0f); x <= Mathf.Min(chunkID.x + 1, mapSize); x++) {
+			for (float y = Mathf.Max(chunkID.y, 0f); y <= Mathf.Min(chunkID.y + 2, mapSize); y++) {
 				IDs.Add(new Vector2(x, y));
 			}
 		}

@@ -13,6 +13,9 @@ public class TerrainCharacteristicsEditor : MonoBehaviour {
 	// The window which all area list elements are attached to
 	public GameObject areaListWindow;
 
+	// The minimap object
+	public Minimap minimap;
+
 	// Data structures for managing the buttons for all the terrain areas
 	public List<GameObject> terrainAreaButtons;
 	private Dictionary<Color, TerrainAreaButton> terrainAreaButtonsByColor;
@@ -29,9 +32,6 @@ public class TerrainCharacteristicsEditor : MonoBehaviour {
 
 	// The color key of Terrain Area that is being edited
 	private Color selectedTerrainAreaColorKey;
-
-	// The number of terrain Areas that have been created
-	private int numberOfTerrainAreas = 2;
 
 	void Start() {
 		//Dictionaries cant be initialized in the inspector. So we initialize it here with the values given in inspector for the list
@@ -80,16 +80,19 @@ public class TerrainCharacteristicsEditor : MonoBehaviour {
 			roughnessSlider.value = area.roughness;
 		}
 		dontAffectVariables = false;
+
+		//Make the minimap drawing use this color
+		minimap.drawingColor = colorKey;
 	}
 
 	public void NewTerrainArea() {
 		//Get a unique color for the new area
 		Color colorKey = Color.white;
 		while (TCM.colorKeyIsUsed(colorKey))
-			colorKey = new Color (Random.Range (0f, 1f), Random.Range (0f, 1f), Random.Range (0f, 1f));
+			colorKey = AuxiliarMethods.FixColor(new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f)));
 
 		//Get the default name of the new area
-		string name = "Terrain Area " + numberOfTerrainAreas++;
+		string name = "Terrain Area " + (terrainAreaButtons.Count + 1);
 
 		//Create the TerrainArea object
 		TCM.addTerrainArea (colorKey);

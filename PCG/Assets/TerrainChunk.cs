@@ -12,7 +12,7 @@ public class TerrainChunk : MonoBehaviour {
 
 	private Vector2 chunkID;
 
-	private int resolution = 100;
+	private int resolution = 64;
 
 	private Vector3[] vertices;
 
@@ -79,7 +79,13 @@ public class TerrainChunk : MonoBehaviour {
 
 		// Launch the value calculation thread
 		TerrainCharacteristicsManager tcm = TerrainCharacteristicsManager.Instance;
-		thread = new ValueCalculationThreadedJob (chunkID, resolution, vertices, tcm.getTerrainAreasDeepCopy ());
+		object chunkMap = tcm.getChunkMap (chunkID);
+		if (chunkMap is Color[][])
+			thread = new ValueCalculationThreadedJob (chunkID, resolution, vertices, tcm.getTerrainAreasDeepCopy (), (Color[][])chunkMap);
+		else if (chunkMap is Color) // Optimized if only one color
+			thread = new ValueCalculationThreadedJob (chunkID, resolution, vertices, tcm.getTerrainAreasDeepCopy () [(Color)chunkMap]);
+		else
+			throw new UnityException ("The result object 'chunkMap' wasn't either a Color nor a Color[][].");
 		thread.Start();
 
 		// If the thread was already launched, and thus the coroutine already existed, we do not neet to start the waiting coroutine again.
