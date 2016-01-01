@@ -51,6 +51,13 @@ public class TerrainCharacteristicsEditor : MonoBehaviour {
 		SetSelectedTerrainArea (Color.white, false);
 	}
 
+	public void ChangeAverageHeight(float value) {
+		if (!dontAffectVariables) {
+			TCM.getTerrainArea(selectedTerrainAreaColorKey).averageHeight = value;
+			CL.ReloadAllChunks ();
+		}
+	}
+
 	public void ChangeFlatness(float value) {
 		if (!dontAffectVariables) {
 			TCM.getTerrainArea(selectedTerrainAreaColorKey).flatness = value;

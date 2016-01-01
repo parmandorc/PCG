@@ -59,9 +59,12 @@ public class ValueCalculationThreadedJob : ThreadedJob
 				
 				// Calculate values
 				float sample = Noise.Sum(point, (float)parameters["frequency"], 6, (float)parameters["lacunarity"], (float)parameters["persistence"]) + 0.5f;
+				float strength = (float)parameters["strength"];
+				sample *= strength;// / (float)parameters["frequency"];
+				sample += (1f - strength) / 2f;
+				sample += (float)parameters["averageHeight"] - 0.5f;
 				colors[v] = ((Gradient)parameters["coloring"]).Evaluate(sample);
-				sample *= (float)parameters["strength"] / (float)parameters["frequency"];
-				vertices[v].y = sample / 1;
+				vertices[v].y = Mathf.Clamp01(sample);
 			}
 		}
 	}
@@ -75,6 +78,7 @@ public class ValueCalculationThreadedJob : ThreadedJob
 		Vector3 point11 = new Vector3( 0.5f, 0.5f) + offset;
 
 		// Get parameters from terrain area
+		float averageHeight = optimizedTerrainArea.averageHeight;
 		float frequency = optimizedTerrainArea.frequency;
 		float lacunarity = optimizedTerrainArea.lacunarity;
 		float persistence = optimizedTerrainArea.roughness;
@@ -91,9 +95,11 @@ public class ValueCalculationThreadedJob : ThreadedJob
 				
 				// Calculate values
 				float sample = Noise.Sum(point, frequency, 6, lacunarity, persistence) + 0.5f;
+				sample *= strength;// / frequency;
+				sample += (1f - strength) / 2f;
+				sample += averageHeight - 0.5f;
 				colors[v] = coloring.Evaluate(sample);
-				sample *= strength / frequency;
-				vertices[v].y = sample / 1;
+				vertices[v].y = Mathf.Clamp01(sample);
 			}
 		}
 	}
@@ -122,6 +128,7 @@ public class ValueCalculationThreadedJob : ThreadedJob
 		// Optimization: 4 areas are the same
 		if (colorKey00 == colorKey01 && colorKey00 == colorKey10 && colorKey00 == colorKey11) {
 			TerrainArea terrainArea = terrainAreas [colorKey00];
+			parameters.Add ("averageHeight", terrainArea.averageHeight);
 			parameters.Add ("frequency", terrainArea.frequency);
 			parameters.Add ("lacunarity", terrainArea.lacunarity);
 			parameters.Add ("persistence", terrainArea.roughness);
@@ -139,6 +146,8 @@ public class ValueCalculationThreadedJob : ThreadedJob
 			// Get interpolated parameters
 			float deltaX = x - xCoord + 0.5f;
 			float deltaY = y - yCoord + 0.5f;
+			parameters.Add ("averageHeight", Mathf.Lerp (Mathf.Lerp (terrainArea00.averageHeight, terrainArea10.averageHeight, deltaX),
+			                                         Mathf.Lerp (terrainArea01.averageHeight, terrainArea11.averageHeight, deltaX), deltaY));
 			parameters.Add ("frequency", Mathf.Lerp (Mathf.Lerp (terrainArea00.frequency, terrainArea10.frequency, deltaX),
 		                                        Mathf.Lerp (terrainArea01.frequency, terrainArea11.frequency, deltaX), deltaY));
 			parameters.Add ("lacunarity", Mathf.Lerp (Mathf.Lerp (terrainArea00.lacunarity, terrainArea10.lacunarity, deltaX),

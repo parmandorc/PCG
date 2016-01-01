@@ -685,7 +685,7 @@ RectTransform:
   m_RootOrder: 0
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 5.7220459e-06}
+  m_AnchoredPosition: {x: 0, y: 24.5999813}
   m_SizeDelta: {x: 18.8999996, y: 24.6000004}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &362953513
@@ -1035,8 +1035,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 805524355}
   m_HandleRect: {fileID: 805524354}
   m_Direction: 0
-  m_Value: 8.07343611e-07
-  m_Size: .878813505
+  m_Value: 8.07342929e-07
+  m_Size: .854954183
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -2559,7 +2559,18 @@ MonoBehaviour:
   m_Value: .5
   m_OnValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 383717661}
+        m_MethodName: ChangeAverageHeight
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_TypeName: UnityEngine.UI.Slider+SliderEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!1 &1629176607

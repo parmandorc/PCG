@@ -108,6 +108,7 @@ public static class Noise {
 			ty) * AuxiliarMethods.sqr2;
 	}
 
+	// Returns a 3D Perlin noise value, ranging in the interval [-0.5, +0.5].
 	public static float Perlin3D (Vector3 point, float frequency) {
 		point *= frequency;
 		int ix0 = Mathf.FloorToInt(point.x);
