@@ -10,6 +10,8 @@ public class TerrainCharacteristicsEditor : MonoBehaviour {
 	public Slider flatnessSlider;
 	public Slider roughnessSlider;
 
+	public MaterialEditor materialEditor;
+
 	// The window which all area list elements are attached to
 	public GameObject areaListWindow;
 
@@ -40,13 +42,11 @@ public class TerrainCharacteristicsEditor : MonoBehaviour {
 			TerrainAreaButton component = button.GetComponent<TerrainAreaButton>();
 			terrainAreaButtonsByColor.Add(component.colorKey, component);
 		}
-	}
 
-	public void Init () {
 		// Get references to managers
 		TCM = TerrainCharacteristicsManager.Instance;
 		CL = ChunkLoader.Instance;
-
+		
 		// Select the initial defaul area
 		SetSelectedTerrainArea (Color.white, false);
 	}
@@ -72,6 +72,13 @@ public class TerrainCharacteristicsEditor : MonoBehaviour {
 		}
 	}
 
+	public void ChangeMaterial(Eppy.Tuple<TerrainMaterial, Gradient> material) {
+		if (!dontAffectVariables) {
+			TCM.getTerrainArea(selectedTerrainAreaColorKey).material = material;
+			CL.ReloadAllChunks ();
+		}
+	}
+
 	public void SetSelectedTerrainArea(Color colorKey, bool deselect = true) {
 		if (deselect)
 			terrainAreaButtonsByColor [selectedTerrainAreaColorKey].Deselect ();
@@ -85,6 +92,7 @@ public class TerrainCharacteristicsEditor : MonoBehaviour {
 			averageHeightSlider.value = area.averageHeight;
 			flatnessSlider.value = area.flatness;
 			roughnessSlider.value = area.roughness;
+			materialEditor.setToggleOn(area.material.Item1);
 		}
 		dontAffectVariables = false;
 
@@ -117,5 +125,9 @@ public class TerrainCharacteristicsEditor : MonoBehaviour {
 
 		//Set the new area as the selected one
 		SetSelectedTerrainArea (colorKey);
+	}
+
+	public Gradient getColoringForMaterial(TerrainMaterial material) {
+		return materialEditor.colorings[material];
 	}
 }

@@ -11,7 +11,7 @@ public class TerrainCharacteristicsManager : MonoBehaviour {
 	public Minimap minimap;
 
 	// Default coloring of the terrain
-	public Gradient defaultColoring;
+	public TerrainMaterial defaultMaterial;
 
 	// Default characterstics of new areas
 	public float defaultAverageHeight, defaultFlatness, defaultRoughness;
@@ -39,18 +39,6 @@ public class TerrainCharacteristicsManager : MonoBehaviour {
 		// Create default terrain area
 		terrainAreas = new Dictionary<Color, TerrainArea> ();
 		terrainAreas.Add (Color.white, newDefaultTerrainArea());
-
-		TCE.Init ();
-	}
-
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
 	}
 
 	// Returns a deepCopy of the terrainAreas table. Threads need a deep copy because values might change during the thread process.
@@ -109,6 +97,6 @@ public class TerrainCharacteristicsManager : MonoBehaviour {
 	}
 
 	public TerrainArea newDefaultTerrainArea() {
-		return new TerrainArea (defaultAverageHeight, defaultFlatness, defaultRoughness, defaultColoring);
+		return new TerrainArea (defaultAverageHeight, defaultFlatness, defaultRoughness, new Eppy.Tuple<TerrainMaterial, Gradient>(defaultMaterial, TCE.getColoringForMaterial(defaultMaterial)));
 	}
 }

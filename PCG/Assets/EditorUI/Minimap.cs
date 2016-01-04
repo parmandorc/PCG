@@ -39,11 +39,6 @@ public class Minimap : MonoBehaviour {
 		minimapTexture.Apply ();
 		minimapUIElement.texture = minimapTexture;
 	}
-	
-	// Update is called once per frame
-	void Update () {
-
-	}
 
 	public void DrawOnMinimap(BaseEventData bed) {
 		Vector2 normCoords = PointerPositionToNormalizedImageCoordinates ((PointerEventData)bed);

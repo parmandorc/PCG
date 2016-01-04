@@ -55,15 +55,14 @@ public class ValueCalculationThreadedJob : ThreadedJob
 				Vector3 point = Vector3.Lerp (point0, point1, x * stepSize);
 				
 				// Get parameters from terrain area
-				Dictionary<string, object> parameters = getParameters((float)x / resolution, (float)y / resolution);
-				
+				TerrainArea parameters = getParameters((float)x / resolution, (float)y / resolution);
+
 				// Calculate values
-				float sample = Noise.Sum(point, (float)parameters["frequency"], 6, (float)parameters["lacunarity"], (float)parameters["persistence"]) + 0.5f;
-				float strength = (float)parameters["strength"];
-				sample *= strength;// / (float)parameters["frequency"];
-				sample += (1f - strength) / 2f;
-				sample += (float)parameters["averageHeight"] - 0.5f;
-				colors[v] = ((Gradient)parameters["coloring"]).Evaluate(sample);
+				float sample = Noise.Sum(point, parameters.frequency, 6, parameters.lacunarity, parameters.roughness) + 0.5f;
+				sample *= parameters.flatness;// / (float)parameters["frequency"];
+				sample += (1f - parameters.flatness) / 2f;
+				colors[v] = parameters.evaluateColor(Mathf.Clamp(sample, 0.5f - parameters.averageHeight, 1.5f - parameters.averageHeight));
+				sample += parameters.averageHeight - 0.5f;
 				vertices[v].y = Mathf.Clamp01(sample);
 			}
 		}
@@ -83,7 +82,7 @@ public class ValueCalculationThreadedJob : ThreadedJob
 		float lacunarity = optimizedTerrainArea.lacunarity;
 		float persistence = optimizedTerrainArea.roughness;
 		float strength = optimizedTerrainArea.flatness;
-		Gradient coloring = optimizedTerrainArea.coloring;
+		Gradient coloring = optimizedTerrainArea.material.Item2;
 
 		colors = new Color[vertices.Length];
 		float stepSize = 1f / resolution;
@@ -97,15 +96,15 @@ public class ValueCalculationThreadedJob : ThreadedJob
 				float sample = Noise.Sum(point, frequency, 6, lacunarity, persistence) + 0.5f;
 				sample *= strength;// / frequency;
 				sample += (1f - strength) / 2f;
+				colors[v] = coloring.Evaluate(Mathf.Clamp(sample, 0.5f - averageHeight, 1.5f - averageHeight));
 				sample += averageHeight - 0.5f;
-				colors[v] = coloring.Evaluate(sample);
 				vertices[v].y = Mathf.Clamp01(sample);
 			}
 		}
 	}
 
-	private Dictionary<string,object> getParameters(float x, float y) {
-		Dictionary<string, object> parameters = new Dictionary<string, object> ();
+	private TerrainArea getParameters(float x, float y) {
+		TerrainArea parameters;
 
 		// Change coords from [0,1] scale to [0, chunkResolution]
 		x = Mathf.Lerp (0, chunkMap.Length - 2, x);
@@ -128,12 +127,13 @@ public class ValueCalculationThreadedJob : ThreadedJob
 		// Optimization: 4 areas are the same
 		if (colorKey00 == colorKey01 && colorKey00 == colorKey10 && colorKey00 == colorKey11) {
 			TerrainArea terrainArea = terrainAreas [colorKey00];
-			parameters.Add ("averageHeight", terrainArea.averageHeight);
-			parameters.Add ("frequency", terrainArea.frequency);
-			parameters.Add ("lacunarity", terrainArea.lacunarity);
-			parameters.Add ("persistence", terrainArea.roughness);
-			parameters.Add ("strength", terrainArea.flatness);
-			parameters.Add ("coloring", terrainArea.coloring);
+//			parameters.Add ("averageHeight", terrainArea.averageHeight);
+//			parameters.Add ("frequency", terrainArea.frequency);
+//			parameters.Add ("lacunarity", terrainArea.lacunarity);
+//			parameters.Add ("persistence", terrainArea.roughness);
+//			parameters.Add ("strength", terrainArea.flatness);
+//			parameters.Add ("coloring", terrainArea.material.Item2);
+			parameters = new TerrainArea(terrainArea.averageHeight, terrainArea.flatness, terrainArea.roughness, terrainArea.material);
 
 		} else {
 
@@ -146,17 +146,15 @@ public class ValueCalculationThreadedJob : ThreadedJob
 			// Get interpolated parameters
 			float deltaX = x - xCoord + 0.5f;
 			float deltaY = y - yCoord + 0.5f;
-			parameters.Add ("averageHeight", Mathf.Lerp (Mathf.Lerp (terrainArea00.averageHeight, terrainArea10.averageHeight, deltaX),
-			                                         Mathf.Lerp (terrainArea01.averageHeight, terrainArea11.averageHeight, deltaX), deltaY));
-			parameters.Add ("frequency", Mathf.Lerp (Mathf.Lerp (terrainArea00.frequency, terrainArea10.frequency, deltaX),
-		                                        Mathf.Lerp (terrainArea01.frequency, terrainArea11.frequency, deltaX), deltaY));
-			parameters.Add ("lacunarity", Mathf.Lerp (Mathf.Lerp (terrainArea00.lacunarity, terrainArea10.lacunarity, deltaX),
-		                                         Mathf.Lerp (terrainArea01.lacunarity, terrainArea11.lacunarity, deltaX), deltaY));
-			parameters.Add ("persistence", Mathf.Lerp (Mathf.Lerp (terrainArea00.roughness, terrainArea10.roughness, deltaX),
-		                                          Mathf.Lerp (terrainArea01.roughness, terrainArea11.roughness, deltaX), deltaY));
-			parameters.Add ("strength", Mathf.Lerp (Mathf.Lerp (terrainArea00.flatness, terrainArea10.flatness, deltaX),
-		                                       Mathf.Lerp (terrainArea01.flatness, terrainArea11.flatness, deltaX), deltaY));
-			parameters.Add ("coloring", terrainArea00.coloring);
+			float averageHeight = Mathf.Lerp (Mathf.Lerp (terrainArea00.averageHeight, terrainArea10.averageHeight, deltaX),
+			                                         Mathf.Lerp (terrainArea01.averageHeight, terrainArea11.averageHeight, deltaX), deltaY);
+			float flatness = Mathf.Lerp (Mathf.Lerp (terrainArea00.flatness, terrainArea10.flatness, deltaX),
+			                             Mathf.Lerp (terrainArea01.flatness, terrainArea11.flatness, deltaX), deltaY);
+			float roughness = Mathf.Lerp (Mathf.Lerp (terrainArea00.roughness, terrainArea10.roughness, deltaX),
+			                              Mathf.Lerp (terrainArea01.roughness, terrainArea11.roughness, deltaX), deltaY);
+			parameters = new ExtendedTerrainArea(averageHeight, flatness, roughness,
+			                                     terrainArea00.material.Item2, terrainArea10.material.Item2, terrainArea01.material.Item2, terrainArea11.material.Item2,
+			                                     deltaX, deltaY);
 		}
 
 		return parameters;

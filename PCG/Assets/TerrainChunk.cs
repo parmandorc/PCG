@@ -62,12 +62,6 @@ public class TerrainChunk : MonoBehaviour {
 		return this;
 	}
 
-
-	// Update is called once per frame
-	void Update () {
-	
-	}
-
 	public void CalculateValues() {
 		bool substitutingThread = false;
 
