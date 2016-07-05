@@ -1,14 +1,14 @@
 # =============== #
 # Unity generated #
 # =============== #
-*/Temp/
-*/Library/
+Temp/
+Library/
 
 # ===================================== #
 # Visual Studio / MonoDevelop generated #
 # ===================================== #
-*/ExportedObj/
-*/obj/
+ExportedObj/
+obj/
 *.svd
 *.userprefs
 *.csproj
@@ -27,10 +27,10 @@
 *._*
 *.Spotlight-V100
 *.Trashes
-*/ehthumbs.db
-*/Thumbs.db
+*ehthumbs.db
+*Thumbs.db
 
 # ====== #
 # Others #
 # =======#
-*/Builds/
+Builds/
