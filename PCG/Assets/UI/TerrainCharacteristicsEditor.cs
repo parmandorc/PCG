@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
+// Class responsible for the edition of all defining data of the terrain areas in the UI
 public class TerrainCharacteristicsEditor : MonoBehaviour {
 
 	// References to the sliders the editor has
@@ -10,6 +11,7 @@ public class TerrainCharacteristicsEditor : MonoBehaviour {
 	public Slider flatnessSlider;
 	public Slider roughnessSlider;
 
+	// Reference to the materials editor.
 	public MaterialEditor materialEditor;
 
 	// The window which all area list elements are attached to
@@ -54,6 +56,7 @@ public class TerrainCharacteristicsEditor : MonoBehaviour {
 	public void ChangeAverageHeight(float value) {
 		if (!dontAffectVariables) {
 			TCM.getTerrainArea(selectedTerrainAreaColorKey).averageHeight = value;
+			UpperLayersManager.Instance.RecalculateUpperLayers ();
 			CL.ReloadAllChunks ();
 		}
 	}
@@ -61,6 +64,7 @@ public class TerrainCharacteristicsEditor : MonoBehaviour {
 	public void ChangeFlatness(float value) {
 		if (!dontAffectVariables) {
 			TCM.getTerrainArea(selectedTerrainAreaColorKey).flatness = value;
+			UpperLayersManager.Instance.RecalculateUpperLayers ();
 			CL.ReloadAllChunks ();
 		}
 	}
@@ -68,6 +72,7 @@ public class TerrainCharacteristicsEditor : MonoBehaviour {
 	public void ChangeRoughness(float value) {
 		if (!dontAffectVariables) {
 			TCM.getTerrainArea(selectedTerrainAreaColorKey).roughness = value;
+			UpperLayersManager.Instance.RecalculateUpperLayers ();
 			CL.ReloadAllChunks ();
 		}
 	}
@@ -97,7 +102,7 @@ public class TerrainCharacteristicsEditor : MonoBehaviour {
 		dontAffectVariables = false;
 
 		//Make the minimap drawing use this color
-		minimap.drawingColor = colorKey;
+		minimap.drawingColor = AuxiliarMethods.FixColor(colorKey);
 	}
 
 	public void NewTerrainArea() {

@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
+// Auxiliar class with all noise-related functions.
 public static class Noise {
 
 	private static int[] perlinPermutation = {
@@ -75,6 +77,7 @@ public static class Noise {
 	
 	private const int gradientsMask3D = 15;
 
+	// Returns a 2D Perlin noise value, ranging in the interval [-0.5, +0.5].
 	public static float Perlin2D (Vector3 point, float frequency) {
 		point *= frequency;
 		int ix0 = Mathf.FloorToInt(point.x);
@@ -95,10 +98,10 @@ public static class Noise {
 		Vector2 g01 = gradients2D[perlinPermutation[h0 + iy1] & gradientsMask2D];
 		Vector2 g11 = gradients2D[perlinPermutation[h1 + iy1] & gradientsMask2D];
 		
-		float v00 = AuxiliarMethods.Dot(g00, tx0, ty0);
-		float v10 = AuxiliarMethods.Dot(g10, tx1, ty0);
-		float v01 = AuxiliarMethods.Dot(g01, tx0, ty1);
-		float v11 = AuxiliarMethods.Dot(g11, tx1, ty1);
+		float v00 = Vector2.Dot(g00, new Vector2(tx0, ty0));
+		float v10 = Vector2.Dot(g10, new Vector2(tx1, ty0));
+		float v01 = Vector2.Dot(g01, new Vector2(tx0, ty1));
+		float v11 = Vector2.Dot(g11, new Vector2(tx1, ty1));
 		
 		float tx = AuxiliarMethods.Smooth(tx0);
 		float ty = AuxiliarMethods.Smooth(ty0);
@@ -142,14 +145,14 @@ public static class Noise {
 		Vector3 g011 = gradients3D[perlinPermutation[h01 + iz1] & gradientsMask3D];
 		Vector3 g111 = gradients3D[perlinPermutation[h11 + iz1] & gradientsMask3D];
 		
-		float v000 = AuxiliarMethods.Dot(g000, tx0, ty0, tz0);
-		float v100 = AuxiliarMethods.Dot(g100, tx1, ty0, tz0);
-		float v010 = AuxiliarMethods.Dot(g010, tx0, ty1, tz0);
-		float v110 = AuxiliarMethods.Dot(g110, tx1, ty1, tz0);
-		float v001 = AuxiliarMethods.Dot(g001, tx0, ty0, tz1);
-		float v101 = AuxiliarMethods.Dot(g101, tx1, ty0, tz1);
-		float v011 = AuxiliarMethods.Dot(g011, tx0, ty1, tz1);
-		float v111 = AuxiliarMethods.Dot(g111, tx1, ty1, tz1);
+		float v000 = Vector3.Dot(g000, new Vector3(tx0, ty0, tz0));
+		float v100 = Vector3.Dot(g100, new Vector3(tx1, ty0, tz0));
+		float v010 = Vector3.Dot(g010, new Vector3(tx0, ty1, tz0));
+		float v110 = Vector3.Dot(g110, new Vector3(tx1, ty1, tz0));
+		float v001 = Vector3.Dot(g001, new Vector3(tx0, ty0, tz1));
+		float v101 = Vector3.Dot(g101, new Vector3(tx1, ty0, tz1));
+		float v011 = Vector3.Dot(g011, new Vector3(tx0, ty1, tz1));
+		float v111 = Vector3.Dot(g111, new Vector3(tx1, ty1, tz1));
 		
 		float tx = AuxiliarMethods.Smooth(tx0);
 		float ty = AuxiliarMethods.Smooth(ty0);
@@ -160,8 +163,8 @@ public static class Noise {
 			tz);
 	}
 
-	// Calculate a fractalized Perlin3D noise value
-	public static float Sum (Vector3 point, float frequency, int octaves, float lacunarity, float persistence) {
+	// Calculate a fractalized Perlin3D noise value, in the [0,1] interval.
+	public static float FractalPerlin3D (Vector3 point, float frequency, int octaves, float lacunarity, float persistence, float strength, float offset) {
 		float sum = Perlin3D(point, frequency);
 		float amplitude = 1f;
 		float range = 1f;
@@ -171,7 +174,61 @@ public static class Noise {
 			range += amplitude;
 			sum += Perlin3D(point, frequency) * amplitude;
 		}
-		return sum / range;
+		return Mathf.Clamp01((sum / range) * strength + offset);
 	}
 
+	// Returns the height calculation parameters for a given point in [0,1] coordinates for the provided chunkMap
+	public static TerrainArea getParameters(float x, float y, Color[][] chunkMap, Dictionary<Color, TerrainArea> terrainAreas) {
+		
+		TerrainArea parameters;
+
+		// Change coords from [0,1] scale to [0, chunkResolution]
+		x = Mathf.Lerp (0, chunkMap.Length - 2, x);
+		y = Mathf.Lerp (0, chunkMap [0].Length - 2, y);
+
+		// Get coords for the terrain area for interpolation
+		int xCoord = Mathf.FloorToInt(x - 0.5f) + 1;
+		int yCoord = Mathf.FloorToInt(y - 0.5f) + 1;
+
+		// Get color keys for the 4 areas
+		Color colorKey00 = chunkMap[xCoord][yCoord];
+		Color colorKey10 = chunkMap[xCoord + 1][yCoord];
+		Color colorKey01 = chunkMap[xCoord][yCoord + 1];
+		Color colorKey11 = chunkMap[xCoord + 1][yCoord + 1];
+
+
+		if (!terrainAreas.ContainsKey (colorKey00) || !terrainAreas.ContainsKey (colorKey01) || 
+		    !terrainAreas.ContainsKey (colorKey10) || !terrainAreas.ContainsKey (colorKey11))
+			Debug.Log ("EXCEPTION: Color key not existent!");
+
+
+		// Optimization: 4 areas are the same
+		if (colorKey00 == colorKey01 && colorKey00 == colorKey10 && colorKey00 == colorKey11) {
+			TerrainArea terrainArea = terrainAreas [colorKey00];
+			parameters = new TerrainArea(terrainArea.averageHeight, terrainArea.flatness, terrainArea.roughness, terrainArea.material);
+
+		} else {
+
+			// Get the 4 areas
+			TerrainArea terrainArea00 = terrainAreas [colorKey00];
+			TerrainArea terrainArea10 = terrainAreas [colorKey10];
+			TerrainArea terrainArea01 = terrainAreas [colorKey01];
+			TerrainArea terrainArea11 = terrainAreas [colorKey11];
+
+			// Get interpolated parameters
+			float deltaX = x - xCoord + 0.5f;
+			float deltaY = y - yCoord + 0.5f;
+			float averageHeight = Mathf.Lerp (Mathf.Lerp (terrainArea00.averageHeight, terrainArea10.averageHeight, deltaX),
+				Mathf.Lerp (terrainArea01.averageHeight, terrainArea11.averageHeight, deltaX), deltaY);
+			float flatness = Mathf.Lerp (Mathf.Lerp (terrainArea00.flatness, terrainArea10.flatness, deltaX),
+				Mathf.Lerp (terrainArea01.flatness, terrainArea11.flatness, deltaX), deltaY);
+			float roughness = Mathf.Lerp (Mathf.Lerp (terrainArea00.roughness, terrainArea10.roughness, deltaX),
+				Mathf.Lerp (terrainArea01.roughness, terrainArea11.roughness, deltaX), deltaY);
+			parameters = new ExtendedTerrainArea(averageHeight, flatness, roughness,
+				terrainArea00.material.Item2, terrainArea10.material.Item2, terrainArea01.material.Item2, terrainArea11.material.Item2,
+				deltaX, deltaY);
+		}
+
+		return parameters;
+	}
 }

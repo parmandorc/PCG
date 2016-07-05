@@ -2,10 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 
+// Singleton class responsible for the control of the level streaming system.
 public class ChunkLoader : MonoBehaviour 
 {
+	// Prefab for the terrain chunks to load
 	public TerrainChunk terrainChunkPrefab;
-	
+
+	// ID Reference to the last chunk the player was in.
 	private Vector2? lastChunkID = null;
 
 	// Table of all the chunks loaded in the scene (key = Vector2("chunkID"), value = TerrainChunk)
@@ -50,9 +53,11 @@ public class ChunkLoader : MonoBehaviour
 				else {
 					// Reload outdated chunks
 					TerrainChunk chunk = chunks[chunkID];
-					if (chunk.version < currentVersion) {
-						chunk.CalculateValues();
+					if (chunk.version < currentVersion) { // Reload chunk if version-invalidated
+						chunk.CalculateValues ();
 						chunk.version = currentVersion;
+					} else if (chunk.mustApplyUpperLayers) { // Reload chunk if flag-invalidated
+						chunk.ApplyUpperLayers ();
 					}
 				}
 			}
@@ -78,7 +83,21 @@ public class ChunkLoader : MonoBehaviour
 		}
 	}
 
-	// Returns the IDs of the chunks that should be loaded. Note: not only the one the player is in, but also the surrounding ones so that navigation is fluid.
+	public void ReloadAllChunks_OnlyUpperLayers() {
+		List<Vector2> chunkIDs = getChunkIDsToLoad(lastChunkID.Value);
+
+		// Reload all chunks. Full reload for loaded chunks, flag invalidation for others.
+		foreach (Vector2 chunkID in chunks.Keys) {
+			TerrainChunk chunk = chunks[chunkID];
+			chunk.mustApplyUpperLayers = true;
+
+			if (chunkIDs.Contains(chunkID)) {
+				chunk.ApplyUpperLayers ();
+			}
+		}
+	}
+
+	// Returns the IDs of the chunks that should be loaded. Note: not only the one the player is in, but also the surrounding ones so that the navigation is fluid.
 	private List<Vector2> getChunkIDsToLoad(Vector2 chunkID)
 	{
 		int mapSize = TerrainCharacteristicsManager.Instance.mapSize - 1;

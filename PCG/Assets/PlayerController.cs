@@ -1,12 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// Class responsible for player navigation
 public class PlayerController : MonoBehaviour {
 
 	public float movementSpeed = 0.5f;
 
 	// Use this for initialization
 	void Start () {
+		
 		// Set player in the middle of the map
 		float x, z;
 		x = z = TerrainCharacteristicsManager.Instance.mapSize / 2f;

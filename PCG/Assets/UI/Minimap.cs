@@ -2,7 +2,9 @@
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 
+// Class responsible for the minimap edition in the multizone editor.
 public class Minimap : MonoBehaviour {
 
 	// The color used for drawing. Will be updated when selecting a terrain area.
@@ -19,7 +21,6 @@ public class Minimap : MonoBehaviour {
 
 	// The RawImage component of the minimap
 	private RawImage minimapUIElement;
-
 
 	// Use this for initialization
 	void Start () {
@@ -57,6 +58,8 @@ public class Minimap : MonoBehaviour {
 		minimapTexture.SetPixel ((int)textureCoords.x, (int)textureCoords.y, drawingColor);
 		minimapTexture.Apply ();
 
+		UpperLayersManager.Instance.RecalculateUpperLayers ();
+
 		// Reload ChunkLoader. TODO: Possible optimization: reload only affected chunks
 		ChunkLoader.Instance.ReloadAllChunks ();
 	}
@@ -64,8 +67,8 @@ public class Minimap : MonoBehaviour {
 	// Gives the color of the requested pixel of the minimap.
 	// If the pixel coords are out of boundaries, it will return the color of the closest pixel.
 	public Color getMinimapTexturePixel(int x, int y) {
-		return minimapTexture.GetPixel ((int)Mathf.Clamp(x, 0, minimapTexture.width - 1), 
-		                                (int)Mathf.Clamp(y, 0, minimapTexture.height - 1));
+		return AuxiliarMethods.FixColor(minimapTexture.GetPixel ((int)Mathf.Clamp(x, 0, minimapTexture.width - 1), 
+			(int)Mathf.Clamp(y, 0, minimapTexture.height - 1)));
 	}
 
 	private Vector2 PointerPositionToNormalizedImageCoordinates(PointerEventData ped) {
@@ -73,5 +76,24 @@ public class Minimap : MonoBehaviour {
 		RectTransformUtility.ScreenPointToLocalPointInRectangle (myRectTransform, ped.position, ped.pressEventCamera, out localPoint); //Get the coordinates of the pointer relative to this object
 		localPoint += myRectTransform.rect.size / 2; //Make (0,0) the bottom left corner
 		return new Vector2(localPoint.x / myRectTransform.rect.size.x, localPoint.y / myRectTransform.rect.size.y); //Normalize to [0,1] intervals (inside the image)
+	}
+
+	// Serializes the minimap to JSON.
+	// Needs the list to transform colors to integers which are the index position of the corresponding area in the list
+	public string ToJson(List<Color> colors) {
+		string output = "[";
+
+		for (int x = 0; x < minimapTexture.width; x++) {
+			output += "[";
+			for (int y = 0; y < minimapTexture.height; y++) {
+				output += colors.IndexOf(AuxiliarMethods.FixColor(minimapTexture.GetPixel(x, y))).ToString() + ",";
+			}
+			output = output.Remove (output.Length - 1);
+			output += "],";
+		}
+
+		output = output.Remove (output.Length - 1);
+		output += "]";
+		return output;
 	}
 }

@@ -12,14 +12,19 @@ public enum TerrainMaterial {
 	OCEAN
 };
 
+// Class responsible for the control of the edition of the materials of the terrain.
 public class MaterialEditor : MonoBehaviour {
 
+	// References to all the UI toggles
 	public Toggle greenHillsToggle, mountainsToggle, desertToggle, mesaToggle, snowLandsToggle, oceanToggle;
 
+	// References to all the terrain colorings
 	public Gradient greenHillsColoring, mountainsColoring, desertColoring, mesaColoring, snowLandsColoring, oceanColoring;
 
+	// Reference to the higher level edition manager.
 	public TerrainCharacteristicsEditor TCE;
 
+	// Container that associates each terrain value with its coloring
 	public Dictionary<TerrainMaterial, Gradient> colorings;
 
 	void Awake () {
@@ -31,6 +36,9 @@ public class MaterialEditor : MonoBehaviour {
 		colorings.Add (TerrainMaterial.SNOW_LANDS, snowLandsColoring);
 		colorings.Add (TerrainMaterial.OCEAN, oceanColoring);
 	}
+
+
+	// --- Event handlers ---
 
 	public void setGreenHills(bool value) {
 		if (value) {
@@ -68,7 +76,11 @@ public class MaterialEditor : MonoBehaviour {
 		}
 	}
 
+	// -----------------------
+
+
 	// Sets the corresponding toggle to On
+	// Note: The currently active one will switch to Off as all toggles are in the same toggle group.
 	public void setToggleOn(TerrainMaterial material) {
 		switch (material) {
 

@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using System.Collections;
 
+// Class responsible for the selection of a terrain area in the multizone editor.
 public class TerrainAreaButton : MonoBehaviour {
 
 	//Colors for selected and deselected states
@@ -37,11 +38,6 @@ public class TerrainAreaButton : MonoBehaviour {
 
 		//Terrain areas that are created are set to the selected one
 		imageComponent.color = selectedColor;
-	}
-
-	// Update is called once per frame
-	void Update () {
-	
 	}
 
 	public void Deselect() {

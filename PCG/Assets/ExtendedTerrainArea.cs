@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-//using System.Collections;
 
 //Used when the material coloring cannot be determined yet, and needs the data for interpolation, which will be done once the value has been calculated.
 public class ExtendedTerrainArea : TerrainArea {

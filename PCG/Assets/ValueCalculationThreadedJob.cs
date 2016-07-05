@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
+// Class responsible for the generation of the terrain's orography of a specified terrain chunk.
 public class ValueCalculationThreadedJob : ThreadedJob
 {
 	// Outputs
@@ -15,20 +16,18 @@ public class ValueCalculationThreadedJob : ThreadedJob
 	private Color[][] chunkMap;
 	private TerrainArea optimizedTerrainArea = null;
 
-	public ValueCalculationThreadedJob(Vector2 chunkID, int resolution, Vector3[] vertices, 
-	                                   Dictionary<Color, TerrainArea> terrainAreas, Color[][] chunkMap) {
-		this.chunkID = chunkID;
-		this.resolution = resolution;
-		this.vertices = vertices;
-		this.terrainAreas = terrainAreas;
-		this.chunkMap = chunkMap;
-	}
+	public ValueCalculationThreadedJob(Vector2 chunkID, Vector3[] vertices) {
 
-	public ValueCalculationThreadedJob(Vector2 chunkID, int resolution, Vector3[] vertices, TerrainArea terrainArea) {
 		this.chunkID = chunkID;
-		this.resolution = resolution;
 		this.vertices = vertices;
-		this.optimizedTerrainArea = terrainArea;
+
+		this.resolution = TerrainChunk.resolution;
+		this.terrainAreas = TerrainCharacteristicsManager.Instance.getTerrainAreasDeepCopy();
+		object chunkMap = TerrainCharacteristicsManager.Instance.getChunkMap (chunkID);
+		if (chunkMap is Color[][])
+			this.chunkMap = (Color[][])chunkMap;
+		else if (chunkMap is Color) // Optimized if only one color
+			this.optimizedTerrainArea = terrainAreas[(Color)chunkMap];
 	}
 
 	protected override void OnRun() {
@@ -53,17 +52,14 @@ public class ValueCalculationThreadedJob : ThreadedJob
 			Vector3 point1 = Vector3.Lerp (point10, point11, y * stepSize);
 			for (int x = 0; x <= resolution; x++, v++) {
 				Vector3 point = Vector3.Lerp (point0, point1, x * stepSize);
-				
+
 				// Get parameters from terrain area
-				TerrainArea parameters = getParameters((float)x / resolution, (float)y / resolution);
+				TerrainArea parameters = Noise.getParameters((float)x / resolution, (float)y / resolution, chunkMap, terrainAreas);
 
 				// Calculate values
-				float sample = Noise.Sum(point, parameters.frequency, 6, parameters.lacunarity, parameters.roughness) + 0.5f;
-				sample *= parameters.flatness;// / (float)parameters["frequency"];
-				sample += (1f - parameters.flatness) / 2f;
-				colors[v] = parameters.evaluateColor(Mathf.Clamp(sample, 0.5f - parameters.averageHeight, 1.5f - parameters.averageHeight));
-				sample += parameters.averageHeight - 0.5f;
-				vertices[v].y = Mathf.Clamp01(sample);
+				float sample = Noise.FractalPerlin3D(point, parameters.frequency, 6, parameters.lacunarity, parameters.roughness, parameters.flatness, parameters.averageHeight);
+				colors[v] = parameters.evaluateColor(sample);
+				vertices[v].y = sample;
 			}
 		}
 	}
@@ -93,70 +89,25 @@ public class ValueCalculationThreadedJob : ThreadedJob
 				Vector3 point = Vector3.Lerp (point0, point1, x * stepSize);
 				
 				// Calculate values
-				float sample = Noise.Sum(point, frequency, 6, lacunarity, persistence) + 0.5f;
-				sample *= strength;// / frequency;
-				sample += (1f - strength) / 2f;
-				colors[v] = coloring.Evaluate(Mathf.Clamp(sample, 0.5f - averageHeight, 1.5f - averageHeight));
-				sample += averageHeight - 0.5f;
-				vertices[v].y = Mathf.Clamp01(sample);
+				float sample = Noise.FractalPerlin3D(point, frequency, 6, lacunarity, persistence, strength, averageHeight);
+				colors[v] = coloring.Evaluate(sample);
+				vertices[v].y = sample;
 			}
 		}
 	}
 
-	private TerrainArea getParameters(float x, float y) {
-		TerrainArea parameters;
-
-		// Change coords from [0,1] scale to [0, chunkResolution]
-		x = Mathf.Lerp (0, chunkMap.Length - 2, x);
-		y = Mathf.Lerp (0, chunkMap [0].Length - 2, y);
-
-		// Get coords for the terrain area for interpolation
-		int xCoord = Mathf.FloorToInt(x - 0.5f) + 1;
-		int yCoord = Mathf.FloorToInt(y - 0.5f) + 1;
-
-		// Get color keys for the 4 areas
-		Color colorKey00 = chunkMap[xCoord][yCoord];
-		Color colorKey10 = chunkMap[xCoord + 1][yCoord];
-		Color colorKey01 = chunkMap[xCoord][yCoord + 1];
-		Color colorKey11 = chunkMap[xCoord + 1][yCoord + 1];
-
-		if (!terrainAreas.ContainsKey (colorKey00) || !terrainAreas.ContainsKey (colorKey01) || 
-		    !terrainAreas.ContainsKey (colorKey10) || !terrainAreas.ContainsKey (colorKey11))
-			Debug.Log ("EXCEPTION: Color key not existent!");
-
-		// Optimization: 4 areas are the same
-		if (colorKey00 == colorKey01 && colorKey00 == colorKey10 && colorKey00 == colorKey11) {
-			TerrainArea terrainArea = terrainAreas [colorKey00];
-//			parameters.Add ("averageHeight", terrainArea.averageHeight);
-//			parameters.Add ("frequency", terrainArea.frequency);
-//			parameters.Add ("lacunarity", terrainArea.lacunarity);
-//			parameters.Add ("persistence", terrainArea.roughness);
-//			parameters.Add ("strength", terrainArea.flatness);
-//			parameters.Add ("coloring", terrainArea.material.Item2);
-			parameters = new TerrainArea(terrainArea.averageHeight, terrainArea.flatness, terrainArea.roughness, terrainArea.material);
-
-		} else {
-
-			// Get the 4 areas
-			TerrainArea terrainArea00 = terrainAreas [colorKey00];
-			TerrainArea terrainArea10 = terrainAreas [colorKey10];
-			TerrainArea terrainArea01 = terrainAreas [colorKey01];
-			TerrainArea terrainArea11 = terrainAreas [colorKey11];
-
-			// Get interpolated parameters
-			float deltaX = x - xCoord + 0.5f;
-			float deltaY = y - yCoord + 0.5f;
-			float averageHeight = Mathf.Lerp (Mathf.Lerp (terrainArea00.averageHeight, terrainArea10.averageHeight, deltaX),
-			                                         Mathf.Lerp (terrainArea01.averageHeight, terrainArea11.averageHeight, deltaX), deltaY);
-			float flatness = Mathf.Lerp (Mathf.Lerp (terrainArea00.flatness, terrainArea10.flatness, deltaX),
-			                             Mathf.Lerp (terrainArea01.flatness, terrainArea11.flatness, deltaX), deltaY);
-			float roughness = Mathf.Lerp (Mathf.Lerp (terrainArea00.roughness, terrainArea10.roughness, deltaX),
-			                              Mathf.Lerp (terrainArea01.roughness, terrainArea11.roughness, deltaX), deltaY);
-			parameters = new ExtendedTerrainArea(averageHeight, flatness, roughness,
-			                                     terrainArea00.material.Item2, terrainArea10.material.Item2, terrainArea01.material.Item2, terrainArea11.material.Item2,
-			                                     deltaX, deltaY);
+	private void ApplyUpperLayer(List<List<Vector3>> layer, Color color) {
+		foreach (List<Vector3> points in layer) {
+			foreach (Vector3 p in points) {
+				Vector3 point = p - new Vector3 (chunkID.x, 0f, chunkID.y);
+				if (point.x >= 0f && point.x <= 1f && point.z >= 0f && point.z <= 1f) {
+					int v = Mathf.RoundToInt (point.x * resolution) + Mathf.RoundToInt (point.z * resolution) * (resolution + 1);
+					if (vertices [v].y <= point.y) {
+						vertices [v].y = point.y;
+						colors [v] = color;
+					}
+				}
+			}
 		}
-
-		return parameters;
 	}
 }

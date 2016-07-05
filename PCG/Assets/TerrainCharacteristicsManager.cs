@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
+// Singleton class responsible for the control of the terrain areas and their defining data.
 public class TerrainCharacteristicsManager : MonoBehaviour {
 
 	// Reference to the Editor
@@ -24,6 +25,7 @@ public class TerrainCharacteristicsManager : MonoBehaviour {
 
 	// Table of the terrain areas that form the map (key = color, value = terrainArea)
 	private Dictionary<Color, TerrainArea> terrainAreas;
+
 
 	void Awake () {
 		// First we check if there are any other instances conflicting
@@ -54,6 +56,10 @@ public class TerrainCharacteristicsManager : MonoBehaviour {
 	// The map is extended a pixel in every direction for the interpolation for graduality.
 	public object getChunkMap(Vector2 chunkID) {
 		int chunkResolution = minimap.chunkResolution;
+		if (chunkID == new Vector2(-1f, -1f)) {
+			chunkResolution *= mapSize;
+			chunkID = new Vector2 (0f, 0f);
+		}
 
 		Color[][] chunkMap = new Color[chunkResolution + 2][];
 		for (int i = 0; i < chunkResolution + 2; i++)
@@ -98,5 +104,26 @@ public class TerrainCharacteristicsManager : MonoBehaviour {
 
 	public TerrainArea newDefaultTerrainArea() {
 		return new TerrainArea (defaultAverageHeight, defaultFlatness, defaultRoughness, new Eppy.Tuple<TerrainMaterial, Gradient>(defaultMaterial, TCE.getColoringForMaterial(defaultMaterial)));
+	}
+
+	public string SaveDataToJson() {
+		string output = "{";
+
+		// Save mapSize
+		output += "\"mapSize\":" + mapSize.ToString () + ",";
+
+		// Save terrain areas
+		output += "\"terrainAreas\":[";
+		foreach (TerrainArea area in terrainAreas.Values) {
+			output += area.ToJson() + ",";
+		}
+		output = output.Remove(output.Length - 1);
+		output += "],";
+
+		// Save minimap
+		output += "\"areasMapMatrix\":" + minimap.ToJson(new List<Color>(terrainAreas.Keys));
+
+		output += "}";
+		return output;
 	}
 }
