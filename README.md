@@ -15,11 +15,11 @@ Another important goal is to design a rich and dynamic interaction. On one hand,
 
 The generation of basic landscape is handled using fractalized Perlin noise. This noise algorithm was created as result of the frustration of his inventor, Ken Perlin, with the unrealistic look of the textures that resulted from other algorithms at the time. 
 
-![Perlin noise and Value noise comparison](http://example.org)
+![Perlin noise and Value noise comparison](./.readme-images/value_perlin_comparison.png)
 
 The noise used is fractalized, which means that several layers are generated at different scales and intensities, and then overlapped, creating this way much more complex and realistic results.
 
-![Fractalized Perlin noise explanation](http://example.org)
+![Fractalized Perlin noise explanation](./.readme-images/fractalized_perlin.png)
 
 This algorithm allows for a rather large set of inputs, from which some of the currently used ones in the tool are:
 - **Vertical offset**. This applies a displacement to the whole terrain, which results in changes in the overall height.
@@ -42,9 +42,9 @@ In this example, a designer working on a 1-vs-1 strategy battle game uses this t
 2. Player bases (pink). Easily navigatable and allowing for easy building: mid height, flat and smooth.
 3. Mountain obstructions (dark gray). Non-navigatable, used to delimit the two halves of the map, allowing a navigatable central section in which to concentrate the action of battle: extreme height, mountainous and rather rough.
 
-![Multi-area editor example UI](http://example.org)
-![Mutli-area editor example global result](http://example.org)
-![Multi-area editor example in-world panoramic views](http://example.org)
+![Multi-area editor example UI](./.readme-images/multiarea_ui.png)
+![Mutli-area editor example global result](./.readme-images/example_global.png)
+![Multi-area editor example in-world panoramic views](./.readme-images/example_views.png)
 
 ## Water bodies generation
 
@@ -54,14 +54,14 @@ This module shows the generation of water bodies using different flooding algori
 
 The flooding algorithm used for this purpose performs horizontal flooding from the given source point and at the specified height.
 
-![Water mass example](http://example.org)
+![Water mass example](./.readme-images/oceans.png)
 ###### All three examples use the same source point coordinates at (0.0, 1.0), but different water level heights: from left to right, 0.4, 0.5 and 0.55.
 
 #### Water courses (rivers).
 
 The flodding algorithm used here is a bit more complex, performing flooding on the steepest negative slope from the source point and generation of intermediate lakes at local minimum points.
 
-![Water course example](http://example.org)
+![Water course example](./.readme-images/rivers.png)
 ###### All three examples use the same source point coordinates at (0.8, 1.8), but different roughness values of the terrain: from left to right, 0.5, 0.3 and 0.7.
 
 ## Roads generation
@@ -69,12 +69,12 @@ The flodding algorithm used here is a bit more complex, performing flooding on t
 The algorithm used for this purpose is an A* search algorithm, which calculates the minimum cost path between two given points, using the euclidean distance for both real cost and estimation functions. However, in order to allow for more control on the results, two additional inputs have been designed:
 - **Maximum slope**. This controls the maximum absolute-value slope the calculated path can have.
 
-![Maximum slope comparison](http://example.org)
+![Maximum slope comparison](./.readme-images/roads_slopes.png)
 ###### From top to bottom, paths generated from point (1.4, 0.5) to point (2.5, 1.5), using maximum slopes of 75%, 62.5% and 50%.
 
 - **Bridge cost penalty**. This sets a penalty cost for path sections generated over water bodies as bridges, and forces the algorithm to search other alternative paths as lower-cost options.
 
-![Bridge cost penalty comparison](http://example.org)
+![Bridge cost penalty comparison](./.readme-images/roads_bridges.png)
 ###### From left to right, paths generated from point (1.2, 1.5) to point (2.0, 1.3), using bridge penalty cost values of 0%, 1% and 2.5%.
 
 ## Parallel architecture
